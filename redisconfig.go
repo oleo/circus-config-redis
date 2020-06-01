@@ -3,7 +3,6 @@ import(
 	"encoding/json"
 	"log"
 	"context"
-	//"fmt"
 	"github.com/go-redis/redis"
 )
 type StringConfig struct {
@@ -27,30 +26,22 @@ type conKey string
 func (e *Init) Get(key string) StringConfig {
 	k := conKey("jalla")
 	ctx := context.WithValue(context.Background(),k, "Goredisssss")
-	// get connection to redis and get json-config
 	cli := rClient(e.Host)
 	err := ping(ctx,cli)
 	if err != nil {
 		log.Println(err)
 	}
 	raw_config := getstr(ctx,cli,key)
-//	"circus:test-string-1:config")
-	//fmt.Printf("Got config:\n%s\n-\n",raw_config)
 	Config := StringConfig{}
 	err = json.Unmarshal([]byte(raw_config), &Config)
 	if err != nil {
 		log.Fatal("Can't deode config JSON: ",err)
 	}
-	//fmt.Println("Will be using:")
-	//fmt.Printf("Host:   %s:%d\n",Config.MessageBus.Host,Config.MessageBus.Port)
-	//fmt.Print("Topic:   ")
-	//fmt.Println(Config.MessageBus.Topic)
 
 	return Config
 }
 
 func rClient(host string) *redis.Client {
-	//fmt.Printf("Will conntact redis at %s\n",host)
 	client := redis.NewClient(&redis.Options{
 		Addr: host,
 		Password: "",
@@ -71,7 +62,6 @@ func ping(ctx context.Context, client *redis.Client) error {
 
 func getstr(ctx context.Context, client *redis.Client,key string) string {
 	out:=""
-//	fmt.Printf("Will try to get %s\n",key)
 	Val, err := client.Get(ctx,key).Result()
 	if err == redis.Nil {
 		log.Println("no value found")
