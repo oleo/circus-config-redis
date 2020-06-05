@@ -17,6 +17,12 @@ type StringConfig struct {
 	}
 	Version string
 	Flavour string
+	Members  []Member
+}
+type Member struct {
+	Id string
+	Type string
+	Host string
 }
 type Init struct {
 	Host string
