@@ -1,1 +1,1 @@
-# circus-config-redis
+# circus-redis
