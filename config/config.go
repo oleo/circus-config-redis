@@ -4,6 +4,7 @@ import(
 	"log"
 	"context"
 	"github.com/go-redis/redis"
+	rc "github.com/oleo/circus-redis/conn"
 )
 type StringConfig struct {
 	Master struct {
@@ -27,17 +28,10 @@ type Member struct {
 type Init struct {
 	Host string
 }
-type conKey string
 
-func (e *Init) Get(key string) StringConfig {
-	k := conKey("jalla")
-	ctx := context.WithValue(context.Background(),k, "Goredisssss")
-	cli := rClient(e.Host)
-	err := ping(ctx,cli)
-	if err != nil {
-		log.Println(err)
-	}
-	raw_config := getstr(ctx,cli,key)
+func (e *Init) GetConfig(key string) StringConfig {
+	rc.Init{e.Host}
+	raw_config := rc.Getstr(key)
 	Config := StringConfig{}
 	err = json.Unmarshal([]byte(raw_config), &Config)
 	if err != nil {
@@ -47,36 +41,3 @@ func (e *Init) Get(key string) StringConfig {
 	return Config
 }
 
-func rClient(host string) *redis.Client {
-	client := redis.NewClient(&redis.Options{
-		Addr: host,
-		Password: "",
-		DB: 0,
-	})
-
-	return client
-}
-
-func ping(ctx context.Context, client *redis.Client) error {
-	_ , err := client.Ping(ctx).Result()
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func getstr(ctx context.Context, client *redis.Client,key string) string {
-	out:=""
-	Val, err := client.Get(ctx,key).Result()
-	if err == redis.Nil {
-		log.Println("no value found")
-	} else if err != nil {
-		panic(err)
-	} else {
-		out=Val
-		return out
-	}
-	return out
-
-}
