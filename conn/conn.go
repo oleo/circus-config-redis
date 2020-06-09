@@ -10,16 +10,6 @@ type Init struct {
 }
 type conKey string
 
-func (e *Init) Get(key string) StringConfig {
-	raw_config := getstr(ctx,cli,key)
-	Config := StringConfig{}
-	err = json.Unmarshal([]byte(raw_config), &Config)
-	if err != nil {
-		log.Fatal("Can't deode config JSON: ",err)
-	}
-
-	return Config
-}
 
 func rClient(host string) *redis.Client {
 	client := redis.NewClient(&redis.Options{
