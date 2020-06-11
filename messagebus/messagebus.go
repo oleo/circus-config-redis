@@ -102,7 +102,7 @@ func (e *Init) Getstr(key string) string {
 	out:=""
 	client := e.GetClient()
 
-	Val, err := client.Get(e.Ctx,key).Result()
+	Val, err := client.Get(e.Ctx(),key).Result()
 	if err == redis.Nil {
 		log.Println("no value found")
 	} else if err != nil {
@@ -190,7 +190,7 @@ func (e *Init) GetHeartbeats() Heartbeats {
 	client := e.GetClient()
 
 	// get list of keys
-	keys,err := client.Keys(e.Ctx,e.Topic+"heartbeat/*").Result()
+	keys,err := client.Keys(e.Ctx(),e.Topic+"heartbeat/*").Result()
 	if err != nil {
 		panic(err)
 	}
@@ -198,7 +198,7 @@ func (e *Init) GetHeartbeats() Heartbeats {
 	for _, key := range keys {
 		// for each key:
 		// retrieve value (should be json) 
-		value,err := client.Get(e.Ctx,key).Result()
+		value,err := client.Get(e.Ctx(),key).Result()
 		if err != nil {
 			panic(err)
 		}
