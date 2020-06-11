@@ -3,6 +3,7 @@ import(
 	"log"
 	"context"
 	//"errors"
+	//"regexp"
 	"strconv"
 	"time"
 	"encoding/json"
@@ -26,6 +27,11 @@ type ID struct {
 	Name string `json:"name"`
 	Timestamp int64 `json:"timestamp"`
 }
+type Heartbeats struct {
+	Timestamp int64 `json:"timestamp"`
+	Beats []ID
+}
+
 type conKey string
 var main_client  *redis.Client
 
@@ -115,10 +121,10 @@ func (e *Init) Getbool(key string) (bool,error) {
 
 }
 
-func (e *Init) SetTopic(key string,value string,ttl int64) {
+func (e *Init) SetTopic(key string,value string,ttl int) {
 	client := e.GetClient()
 
-	err := client.Set(key,value,ttl).Err()
+	err := client.Set(key,value,time.Second * time.Duration(ttl)).Err()
 	if err != nil {
 		panic(err)
 	}
@@ -133,7 +139,7 @@ func (e *Init) PublishTopic(topic string,msg string) {
 	}
 	return
 }
-func (e *Init) Set(key string,value string,ttl int64) {
+func (e *Init) Set(key string,value string,ttl int) {
 	e.SetTopic(e.Topic+key,value,ttl)
 }
 func (e *Init) Publish(msg string) {
@@ -146,18 +152,23 @@ func (e *Init) PublishService(service string,msg string) {
 func (e *Init) Action(action string,msg string) {
 	e.PublishService("action/"+action,msg)
 }
-func (e *Init) sendHeartbeat(node circusNode.CircusNode,secs int64) {
-	node.State.Enrolling=true
-	id_ := ID{	Uuid: node.Uuid,	Name: node.Name, Timestamp: time.Now().Unix()	}
-	jsondata_id, _ := json.Marshal(id_)
-	e.Set("heartbeat/"+node.Uuid,string(jsondata_id),secs * time.Second)
-}
+// Actions
 func (e *Init) Enroll(node circusNode.CircusNode) {
 	node.State.Enrolling=true
 	id_ := ID{	Uuid: node.Uuid,	Name: node.Name, Timestamp: node.Timestamp	}
 	jsondata_id, _ := json.Marshal(id_)
 	e.Action("enroll",string(jsondata_id))
 }
+
+// Sets
+func (e *Init) SendHeartbeat(node circusNode.CircusNode,secs int) {
+	node.State.Enrolling=true
+	id_ := ID{	Uuid: node.Uuid,	Name: node.Name, Timestamp: time.Now().Unix()	}
+	jsondata_id, _ := json.Marshal(id_)
+	e.Set("heartbeat/"+node.Uuid,string(jsondata_id),secs)
+}
+
+// Gets
 func (e *Init) Enrolled(id string) bool {
 	valuestr,err := e.Getbool(e.Topic+"enrolled/"+id)
 	if err != nil {
@@ -165,5 +176,37 @@ func (e *Init) Enrolled(id string) bool {
 		return false
 	}
 	return valuestr
+}
+
+func (e *Init) GetHeartbeats() Heartbeats {
+	var hb_struct Heartbeats
+	hb_struct.Timestamp = time.Now().Unix()
+	
+	client := e.GetClient()
+
+	// get list of keys
+	keys,err := client.Keys(e.Topic+"heartbeat/*").Result()
+	if err != nil {
+		panic(err)
+	}
+	//re := regexp.MustCompile(`heartbeat/(.+)$`)
+	for _, key := range keys {
+		// for each key:
+		// retrieve value (should be json) 
+		value,err := client.Get(key).Result()
+		if err != nil {
+			panic(err)
+		}
+		// unmarshall to ID-struct
+		var tmp = e.GetIdStruct()
+		err = json.Unmarshal([]byte(value), &tmp)
+
+		// append to hb_struct
+		hb_struct.Beats = append(hb_struct.Beats, tmp)
+		//log.Printf("Got %s in %s\n",re.FindStringSubmatch(key)[1],value)
+
+	}
+	// Return hb_struct
+	return hb_struct
 }
 
