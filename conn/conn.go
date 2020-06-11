@@ -21,8 +21,7 @@ func rClient(host string) *redis.Client {
 }
 
 func ping(ctx context.Context, client *redis.Client) error {
-	//_ , err := client.Ping(ctx).Result()
-	_ , err := client.Ping().Result()
+	_ , err := client.Ping(ctx).Result()
 	if err != nil {
 		return err
 	}
@@ -39,8 +38,7 @@ func (e *Init) Getstr(key string) string {
 	if err != nil {
 		log.Println(err)
 	}
-	//Val, err := client.Get(ctx,key).Result()
-	Val, err := client.Get(key).Result()
+	Val, err := client.Get(ctx,key).Result()
 	if err == redis.Nil {
 		log.Println("no value found")
 	} else if err != nil {
