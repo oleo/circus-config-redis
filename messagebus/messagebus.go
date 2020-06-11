@@ -129,7 +129,7 @@ func (e *Init) Getbool(key string) (bool,error) {
 func (e *Init) SetTopic(key string,value string,ttl int) {
 	client := e.GetClient()
 
-	err := client.Set(key,value,time.Second * time.Duration(ttl)).Err()
+	err := client.Set(e.Ctx(),key,value,time.Second * time.Duration(ttl)).Err()
 	if err != nil {
 		panic(err)
 	}
@@ -138,7 +138,7 @@ func (e *Init) SetTopic(key string,value string,ttl int) {
 func (e *Init) PublishTopic(topic string,msg string) {
 	client := e.GetClient()
 
-	err := client.Publish(topic,msg).Err()
+	err := client.Publish(e.Ctx(),topic,msg).Err()
 	if err != nil {
 		panic(err)
 	}
