@@ -48,9 +48,15 @@ func (e *Init) GetIdStruct() ID {
 	_id := ID{}
 	return _id
 }
+func (e *Init) Ctx() context.Context {
+	k := conKey("jalla")
+	ctx := context.WithValue(context.Background(),k, "Goredisssss")
+	return ctx
+}
 func rClient(host string) *redis.Client {
 	k := conKey("jalla")
 	ctx := context.WithValue(context.Background(),k, "Goredisssss")
+
 	client := redis.NewClient(&redis.Options{
 		Addr: host,
 		Password: "",
@@ -61,12 +67,11 @@ func rClient(host string) *redis.Client {
 	if err != nil {
 		log.Println(err)
 	}
- 
 	return client
 }
 
 func ping(ctx context.Context, client *redis.Client) error {
-	_ , err := client.Ping().Result()
+	_ , err := client.Ping(ctx).Result()
 	if err != nil {
 		return err
 	}
