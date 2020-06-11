@@ -1,6 +1,5 @@
 package conn
 import(
-	"encoding/json"
 	"log"
 	"context"
 	"github.com/go-redis/redis"
@@ -22,7 +21,8 @@ func rClient(host string) *redis.Client {
 }
 
 func ping(ctx context.Context, client *redis.Client) error {
-	_ , err := client.Ping(ctx).Result()
+	//_ , err := client.Ping(ctx).Result()
+	_ , err := client.Ping().Result()
 	if err != nil {
 		return err
 	}
@@ -35,11 +35,12 @@ func (e *Init) Getstr(key string) string {
 	k := conKey("jalla")
 	ctx := context.WithValue(context.Background(),k, "Goredisssss")
 	client := rClient(e.Host)
-	err := ping(ctx,cli)
+	err := ping(ctx,client)
 	if err != nil {
 		log.Println(err)
 	}
-	Val, err := client.Get(ctx,key).Result()
+	//Val, err := client.Get(ctx,key).Result()
+	Val, err := client.Get(key).Result()
 	if err == redis.Nil {
 		log.Println("no value found")
 	} else if err != nil {

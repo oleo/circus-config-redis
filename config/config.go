@@ -2,9 +2,9 @@ package redisconfig
 import(
 	"encoding/json"
 	"log"
-	"context"
-	"github.com/go-redis/redis"
-	rc "github.com/oleo/circus-redis/conn"
+	//"context"
+	//"github.com/go-redis/redis"
+	rconn "github.com/oleo/circus-redis/conn"
 )
 type StringConfig struct {
 	Master struct {
@@ -30,10 +30,10 @@ type Init struct {
 }
 
 func (e *Init) GetConfig(key string) StringConfig {
-	rc.Init{e.Host}
+	rc := rconn.Init{e.Host}
 	raw_config := rc.Getstr(key)
 	Config := StringConfig{}
-	err = json.Unmarshal([]byte(raw_config), &Config)
+	err := json.Unmarshal([]byte(raw_config), &Config)
 	if err != nil {
 		log.Fatal("Can't deode config JSON: ",err)
 	}
